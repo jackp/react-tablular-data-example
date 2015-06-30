@@ -7,31 +7,36 @@ import Reflux from "reflux";
 import request from "superagent";
 
 import playerActions from "actions/playerActions";
+import salaryActions from "actions/salaryActions";
 
 const playerStore = Reflux.createStore({
   // Listen to all playerActions
   listenables: playerActions,
 
   onGetPlayers() {
-    // TODO: Api call
-    let testData = [
-      {
-        pid: 1,
-        fn: "Jack",
-        ln: "Parker",
-        s: 4000
-      },
-      {
-        pid: 2,
-        fn: "Bob",
-        ln: "Barker",
-        s: 2000
-      }
-    ];
+    let json = require("../data/players.json");
 
-    setTimeout( () => {
-      this.trigger(testData);
-    }, 1000);
+    this.trigger(json.playerList);
+
+    let currentSalaries = {};
+
+    json.playerList.forEach( (player) => {
+      currentSalaries[player.pid] = player.s;
+    });
+
+    salaryActions.updatePastSalaries(currentSalaries);
+    // BUG: Endpoint provided does not have correct CORS configuration, therefore
+    // cannot access
+    // request
+    //   .get("https://www.draftkings.com/lineup/getavailableplayers?draftGroupId=6260")
+    //   .end( (err, res) => {
+    //     if (err) {
+    //       // TODO: Better error handling
+    //       console.log(err);
+    //     } else {
+    //       this.trigger(res.body.playerList);
+    //     }
+    //   });
   }
 });
 

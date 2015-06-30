@@ -5,23 +5,31 @@
 
 import React from "react";
 import Reflux from "reflux";
-import { Table, Column } from "fixed-data-table";
-import { CircularProgress } from "material-ui";
+import classNames from "classnames";
+import { Table, Tr, Td } from "reactable";
+import { CircularProgress, FloatingActionButton } from "material-ui";
 
+import Salary from "./Salary";
+import UndoButton from "./UndoButton";
 import playerActions from "actions/playerActions";
 import playerStore from "stores/playerStore";
+import salaryStore from "stores/salaryStore";
+import salaryActions from "actions/salaryActions";
 
-require("fixed-data-table/dist/fixed-data-table.css");
 require("./salaryTool.scss");
 
 const SalaryTool = React.createClass({
-  mixins: [Reflux.connect(playerStore, "players")],
+  mixins: [
+    Reflux.connect(playerStore, "players"),
+    Reflux.connect(salaryStore, "salaryChanges")
+  ],
   componentWillMount() {
     playerActions.getPlayers();
   },
   getInitialState() {
     return {
-      players: []
+      players: [],
+      salaryChanges: {}
     };
   },
   _rowGetter(index) {
@@ -32,34 +40,26 @@ const SalaryTool = React.createClass({
 
     if (this.state.players.length) {
       component = (
-        <Table
-          rowHeight={50}
-          headerHeight={50}
-          rowGetter={this._rowGetter}
-          rowsCount={this.state.players.length}
-          width={1000}
-          height={600}
-        >
-          <Column
-            dataKey="pid"
-            label="Player ID"
-            width={100}
-          />
-          <Column
-            dataKey="ln"
-            label="Last Name"
-            width={200}
-          />
-          <Column
-            dataKey="fn"
-            label="First Name"
-            width={200}
-          />
-          <Column
-            dataKey="s"
-            label="Salary"
-            width={200}
-          />
+        <Table defaultSort={{column: "Name"}}>
+          { this.state.players.map( (player) => {
+              let rowClasses = classNames(
+                { "injured": player.i },
+                { "unsaved-changes": this.state.salaryChanges.hasOwnProperty(player.pid) }
+              );
+
+              return (
+                <Tr key={player.pid} className={rowClasses}>
+                  <Td column="Name" data={ `${player.ln}, ${player.fn}` } />
+                  <Td column="Position" data={ player.pn } />
+                  <Td column="Upcoming Game" data={ `${player.atabbr}@${player.htabbr}`} />
+                  <Td column="Salary">
+                    <Salary pid={ player.pid } salary={ player.s }/>
+                  </Td>
+                  <Td column="Undo"><UndoButton pid={ player.pid }/></Td>
+                </Tr>
+              );
+            })
+          }
         </Table>
       );
     } else {
@@ -68,6 +68,13 @@ const SalaryTool = React.createClass({
 
     return (
       <section id="salary-tool">
+        <FloatingActionButton
+          style={{ position: "fixed", bottom: "2rem", right: "2rem" }}
+          secondary={true}
+          onClick={salaryActions.saveChanges}
+        >
+          Save
+        </FloatingActionButton>
         { component }
       </section>
     );

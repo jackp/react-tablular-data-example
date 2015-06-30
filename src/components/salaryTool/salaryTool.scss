@@ -3,4 +3,18 @@
  */
 #salary-tool {
   text-align: center;
+
+  // Injuries
+  .injured {
+    border: 1px solid red;
+  }
+
+  .salary {
+    cursor: pointer;
+  }
+
+  // Changes
+  .unsaved-changes {
+    border: 1px solid green;
+  }
 }
